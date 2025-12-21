@@ -1,29 +1,15 @@
-import { createInterface } from "node:readline";
-import { commandExit } from "./command_exit.js";
-import { commandHelp } from "./command_help.js";
-export function getCommands() {
-    return {
-        exit: {
-            name: "exit",
-            description: "Exits the pokedex",
-            callback: commandExit,
-        },
-        help: {
-            name: "help",
-            description: "Displays a help message",
-            callback: commandHelp,
-        }
-    };
-}
+import { createInterface } from "readline";
+import { getCommands } from "./commands.js";
+import { PokeApi } from "./pokeapi.js";
 export function initState() {
     const rl = createInterface({
         input: process.stdin,
         output: process.stdout,
-        prompt: 'Pokedex > '
+        prompt: "pokedex > ",
     });
-    const state = {
-        interface: rl,
-        commands: getCommands()
+    return {
+        readline: rl,
+        commands: getCommands(),
+        pokeApi: new PokeApi()
     };
-    return state;
 }

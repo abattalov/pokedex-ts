@@ -1,33 +1,31 @@
-import { initState } from "./state.js";
-export function startREPL() {
-    const state = initState();
-    state.interface.prompt();
-    state.interface.on("line", (input) => {
-        const trimmedInput = input.trim();
-        const commands = state.commands;
-        if (commands[trimmedInput]) {
-            commands[trimmedInput].callback(state);
+export function startREPL(state) {
+    state.readline.prompt();
+    state.readline.on("line", async (input) => {
+        const words = cleanInput(input);
+        if (words.length === 0) {
+            state.readline.prompt();
+            return;
         }
-        else {
-            console.log("Unknown command");
-        }
-        if (trimmedInput === "") {
-            state.interface.prompt();
+        const commandName = words[0];
+        const cmd = state.commands[commandName];
+        if (!cmd) {
+            console.log(`Unknown command: "${commandName}". Type "help" for a list of commands.`);
+            state.readline.prompt();
+            return;
         }
         try {
-            state.interface.prompt();
+            await cmd.callback(state);
         }
-        catch (err) {
-            if (err instanceof Error) {
-                console.log("Error: ", err.message);
-            }
-            else {
-                console.error("Error:", err);
-            }
+        catch (e) {
+            console.log(e);
         }
+        state.readline.prompt();
     });
 }
 export function cleanInput(input) {
-    const wordsArr = input.toLowerCase().trim().split(" ");
-    return wordsArr;
+    return input
+        .toLowerCase()
+        .trim()
+        .split(" ")
+        .filter((word) => word !== "");
 }
