@@ -1,11 +1,16 @@
+import { Cache } from "./pokecache.js";
+const cache = new Cache(60000);
 export class PokeApi {
     static baseURL = "https://pokeapi.co/api/v2";
     nextUrl = null;
     previousUrl = null;
     constructor() { }
     async fetchLocations() {
+        const url = this.nextUrl || PokeApi.baseURL + "/location-area/";
+        const cached = cache.get(url);
+        if (cached)
+            return cached;
         try {
-            const url = this.nextUrl || PokeApi.baseURL + "/location-area/";
             const response = await fetch(url);
             if (!response.ok) {
                 throw new Error(`Response status: ${response.status}`);
@@ -18,6 +23,7 @@ export class PokeApi {
                 previous: result.previous,
                 results: result.results,
             };
+            cache.add(url, locations);
             if (locations)
                 return locations;
         }
@@ -31,8 +37,11 @@ export class PokeApi {
         };
     }
     async fetchPreviousLocations() {
+        const url = this.previousUrl || PokeApi.baseURL + "/location-area/";
+        const cached = cache.get(url);
+        if (cached)
+            return cached;
         try {
-            const url = this.previousUrl || PokeApi.baseURL + "/location-area/";
             const response = await fetch(url);
             if (!response.ok) {
                 throw new Error(`Response status: ${response.status}`);
@@ -45,6 +54,7 @@ export class PokeApi {
                 previous: result.previous,
                 results: result.results,
             };
+            cache.add(url, locations);
             if (locations)
                 return locations;
         }
@@ -58,8 +68,12 @@ export class PokeApi {
         };
     }
     async fetchLocation(locationName) {
+        const url = PokeApi.baseURL + "/location-area/" + locationName;
+        const cached = cache.get(url);
+        if (cached)
+            return cached;
         try {
-            const response = await fetch(PokeApi.baseURL + "/location-area/" + locationName);
+            const response = await fetch(url);
             if (!response.ok) {
                 throw new Error(`Response status: ${response.status}`);
             }
@@ -68,8 +82,8 @@ export class PokeApi {
                 name: result.location.name,
                 url: result.location.url,
             };
-            if (location)
-                return location;
+            cache.add(url, location);
+            return location;
         }
         catch (error) {
             console.error("Error:", error);
